@@ -74,14 +74,23 @@ L'offre gratuite d'Expo comprend un quota mensuel de builds Android (file d'atte
 
 ### Option 2 : build local, sans compte (Android Studio requis)
 
-Prérequis : JDK 17 et le SDK Android (installé avec Android Studio, variable `ANDROID_HOME`).
+Prérequis : **JDK 17** (Gradle l'exige, même si un JDK plus récent est installé) et le SDK Android
+(installé avec Android Studio, variable `ANDROID_HOME`) avec la plateforme 37, les build-tools 37.0.0,
+le NDK 27.1.12297006 et CMake 3.22.1.
 
 ```bash
 npx expo prebuild --platform android   # génère le dossier android/ (ignoré par git)
 cd android
-./gradlew assembleRelease
+./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 # APK : android/app/build/outputs/apk/release/app-release.apk
 ```
+
+`-PreactNativeArchitectures=arm64-v8a` limite la compilation aux téléphones 64 bits (quasiment tous les
+téléphones Android récents) : le build est plus rapide et l'APK plus léger. Sans cette option, l'APK
+contient aussi les architectures 32 bits et x86.
+
+Si Maven Central répond « 429 Too Many Requests », relancer la commande : les dépendances déjà
+téléchargées restent en cache et le build reprend où il s'était arrêté.
 
 Cet APK est signé avec la clé de débogage générée localement : il convient pour un usage personnel
 (installation directe sur son téléphone), pas pour le Play Store.
@@ -173,6 +182,8 @@ mobile/
 ## Limites connues
 
 - Les rappels quotidiens et le retour haptique n'ont pas pu être essayés sur un vrai téléphone pendant le
-  développement (vérifiés par la compilation du bundle Android et le typage seulement).
+  développement (APK compilé et vérifié, mais pas d'émulateur Android disponible).
+- `app.json` bloque les permissions Android inutiles ajoutées par défaut (superposition, stockage,
+  biométrie) : l'appli ne demande que l'accès Internet, la vibration et les notifications.
 - « Question au hasard » tous sujets confondus : la route `/questions/random` n'accepte pas `exclude`.
   L'appli retente quelques tirages pour éviter une question déjà vue, sans garantie absolue.
